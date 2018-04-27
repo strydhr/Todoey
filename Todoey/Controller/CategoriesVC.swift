@@ -9,7 +9,7 @@
 import UIKit
 import RealmSwift
 
-class CategoriesVC: UITableViewController {
+class CategoriesVC: SwipeTableVC {
     
     let realm = try! Realm()
     var categories: Results<Category>?
@@ -48,11 +48,11 @@ class CategoriesVC: UITableViewController {
         return categories?.count ?? 1
     }
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
-        
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
+
         let category = categories?[indexPath.row]
         cell.textLabel?.text = category?.name ?? "No Category added"
-        
+
         return cell
     }
     //MARK: - TableView Delegate Method
@@ -78,13 +78,27 @@ class CategoriesVC: UITableViewController {
         }catch{
             print("Unable to save: \(error)")
         }
-        self.tableView.reloadData()
+        tableView.reloadData()
     }
     func loadCategory(){
         categories = realm.objects(Category.self)
         tableView.reloadData()
     }
-
+    //MARK: - SWipe delete method
+    override func updateModel(at indexpath: IndexPath) {
+        if let category = categories?[indexpath.row]{
+            let itemsInCatergory = category.items
+            do{
+                try realm.write {
+                    realm.delete(itemsInCatergory)
+                    realm.delete(category)
+                    
+                }
+            }catch{
+                print("Error deleting item: \(error)")
+            }
+        }
+    }
     
   
 }
